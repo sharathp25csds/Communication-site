@@ -341,9 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('vb_token');
     if (!token) return;
 
-    const API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
-      ? import.meta.env.VITE_API_URL 
-      : '';
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:8080'
+      : 'https://communication-site-production.up.railway.app';
 
     // Build the transcript summary based on what was said
     const transcriptText = fullConversationTranscript.trim() ? fullConversationTranscript.trim() : `Call with ${contactName} — ${duration}s — ${new Date().toLocaleString()}`;

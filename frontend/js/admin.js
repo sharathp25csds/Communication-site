@@ -11,9 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminLogoutBtn = document.getElementById('adminLogoutBtn');
     const adminError = document.getElementById('adminError');
     
-    const API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
-        ? import.meta.env.VITE_API_URL 
-        : '';
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8080'
+        : 'https://communication-site-production.up.railway.app';
 
     // Helper: Close Modal
     const closeAdminModal = (modal) => {

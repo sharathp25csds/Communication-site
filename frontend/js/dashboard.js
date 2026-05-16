@@ -8,9 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('vb_token');
     const user = JSON.parse(localStorage.getItem('vb_user') || 'null');
 
-    const API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
-        ? import.meta.env.VITE_API_URL 
-        : '';
+    const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:8080'
+        : 'https://communication-site-production.up.railway.app';
 
     // Dashboard Protection
     const isDashboardVisible = () => {

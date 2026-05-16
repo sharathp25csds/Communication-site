@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'http://localhost:8080'
-                : 'https://communication-site-production.up.railway.app';
+                : 'https://communication-site.onrender.com';
 
             const response = await fetch(`${API}/api/reports/create`, {
                 method: 'POST',

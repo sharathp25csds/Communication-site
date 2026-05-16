@@ -10,11 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminLoginModal = document.getElementById('adminLoginModal');
     const adminLogoutBtn = document.getElementById('adminLogoutBtn');
     const adminError = document.getElementById('adminError');
-    
     const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:8080'
-        : 'https://communication-site-production.up.railway.app';
-
+        : 'https://communication-site.onrender.com';
     // Helper: Close Modal
     const closeAdminModal = (modal) => {
         if (modal) {
@@ -37,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const statsRes = await fetch(`${API}/api/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!statsRes.ok) throw new Error('Unauthorized');
             const statsData = await statsRes.json();
-            
+
             if (statsData.success) {
                 document.getElementById('totalUsers').innerText = statsData.stats.totalUsers;
                 document.getElementById('totalCalls').innerText = statsData.stats.totalCalls;
@@ -69,13 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const logout = (showToastAndDelay = false) => {
         console.log('✅ Admin logout started');
-        
+
         // Remove all admin-related auth persistence safely
         localStorage.removeItem('vb_admin_token');
         localStorage.removeItem('adminAuth');
         sessionStorage.removeItem('vb_admin_token');
         sessionStorage.removeItem('adminAuth');
-        
+
         console.log('🗑️ Session cleared');
 
         const doRedirect = () => {
@@ -85,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (showToastAndDelay) {
             showToast('Logged out successfully', 'success');
-            
+
             // Show loading animation on the logout button if possible
             if (adminLogoutBtn) {
                 adminLogoutBtn.style.opacity = '0.5';
@@ -98,24 +96,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // Smooth transition before redirect
             document.body.style.transition = 'opacity 0.4s ease';
             document.body.style.opacity = '0';
-            
+
             setTimeout(doRedirect, 800);
         } else {
             doRedirect();
         }
     };
-    
+
     // Toast helper for Admin UI
     const showToast = (msg, type = 'info') => {
         const toastContainer = document.getElementById('toastContainer');
         if (!toastContainer) return alert(msg);
-        
+
         const toast = document.createElement('div');
         toast.className = `toast ${type} show`;
         const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
         toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${msg}</span>`;
         toastContainer.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.classList.remove('show');
             setTimeout(() => toast.remove(), 400);
@@ -139,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                
+
                 const data = await response.json();
 
                 if (response.ok && data.user && data.user.role === 'admin') {
@@ -188,11 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!sectionId) return;
 
             e.preventDefault();
-            
+
             document.querySelectorAll('.admin-section').forEach(section => section.classList.remove('active'));
             const targetSection = document.getElementById(`${sectionId}-section`);
             if (targetSection) targetSection.classList.add('active');
-            
+
             document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
             link.classList.add('active');
         });
@@ -211,9 +209,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.querySelector(`#${tableId} tbody`);
         if (!tbody) return;
         if (!users || users.length === 0) return;
-        
+
         if (!isRecent) tbody.innerHTML = '';
-        
+
         users.forEach(u => {
             const tr = document.createElement('tr');
             const d = new Date(u.created_at);
@@ -243,17 +241,17 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             return;
         }
-        
+
         tbody.innerHTML = '';
         calls.forEach(c => {
             const tr = document.createElement('tr');
-            
+
             const startD = new Date(c.created_at);
             const durationSecs = parseInt(c.duration) || 0;
             const endD = new Date(startD.getTime() + (durationSecs * 1000));
-            
-            const formatDur = durationSecs >= 60 
-                ? `${Math.floor(durationSecs / 60)}m ${durationSecs % 60}s` 
+
+            const formatDur = durationSecs >= 60
+                ? `${Math.floor(durationSecs / 60)}m ${durationSecs % 60}s`
                 : `${durationSecs}s`;
 
             const transcriptPreview = c.transcript ? c.transcript.substring(0, 40) + '...' : 'No summary';
@@ -288,15 +286,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             return;
         }
-        
+
         tbody.innerHTML = '';
         reports.forEach(r => {
             const tr = document.createElement('tr');
             const d = new Date(r.created_at);
-            
+
             const isResolved = r.status.toLowerCase() === 'resolved';
             const badgeClass = isResolved ? 'badge-success' : 'badge-warning';
-            
+
             tr.innerHTML = `
                 <td>#${r.id}</td>
                 <td><strong>${r.user_name}</strong></td>

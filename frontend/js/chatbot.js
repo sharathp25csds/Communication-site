@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enter-to-send is naturally handled by the form submit event
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const message = chatInput.value.trim();
         if (!message) return;
 
@@ -36,8 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'http://localhost:8080'
-                : 'https://communication-site-production.up.railway.app';
-
+                : 'https://communication-site.onrender.com';
             // We add a short timeout using AbortController to prevent hanging
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
@@ -56,12 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 let errData;
                 try {
                     errData = await response.json();
-                } catch(e) {}
+                } catch (e) { }
                 throw new Error((errData && errData.error) ? errData.error : `Server returned ${response.status}`);
             }
 
             const data = await response.json();
-            
+
             if (data.success && data.reply) {
                 addMessage('Bridge Assistant', data.reply, false);
             } else {
@@ -70,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             removeTypingIndicator(typingId);
             console.error('AI Chat Error:', error);
-            
+
             let errorMsg = 'Sorry, I am having trouble connecting to my servers right now.';
             if (error.name === 'AbortError') {
                 errorMsg = 'The request timed out. Please check your connection and try again.';
@@ -85,13 +84,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessage(sender, text, isUser, isError = false) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg ${isUser ? 'user' : ''}`;
-        
+
         const avatarDiv = document.createElement('div');
         avatarDiv.className = 'm-avatar';
-        avatarDiv.innerHTML = isUser ? 
+        avatarDiv.innerHTML = isUser ?
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>' :
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>';
-        
+
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'bubble-msg';
         if (isError) {
@@ -99,15 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
             bubbleDiv.style.color = '#991b1b';
             bubbleDiv.style.border = '1px solid #f87171';
         }
-        
+
         // Convert line breaks to HTML breaks
         bubbleDiv.innerHTML = text.replace(/\n/g, '<br>');
-        
+
         msgDiv.appendChild(avatarDiv);
         msgDiv.appendChild(bubbleDiv);
-        
+
         chatBody.appendChild(msgDiv);
-        
+
         // Auto-scroll
         chatBody.scrollTop = chatBody.scrollHeight;
     }
@@ -117,15 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const msgDiv = document.createElement('div');
         msgDiv.className = 'msg';
         msgDiv.id = id;
-        
+
         const avatarDiv = document.createElement('div');
         avatarDiv.className = 'm-avatar';
         avatarDiv.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>';
-        
+
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'bubble-msg';
         bubbleDiv.innerHTML = '<span class="typing-dot">.</span><span class="typing-dot">.</span><span class="typing-dot">.</span>';
-        
+
         if (!document.getElementById('typing-style')) {
             const style = document.createElement('style');
             style.id = 'typing-style';
@@ -137,13 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             document.head.appendChild(style);
         }
-        
+
         msgDiv.appendChild(avatarDiv);
         msgDiv.appendChild(bubbleDiv);
-        
+
         chatBody.appendChild(msgDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
-        
+
         return id;
     }
 
@@ -153,6 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
             el.remove();
         }
     }
-    
+
     console.log('✅ AI Assistant Chatbot Initialized');
 });

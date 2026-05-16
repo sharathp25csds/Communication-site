@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.style.opacity = isInterim ? '0.7' : '1';
     wrapper.style.transition = 'opacity 0.3s ease';
     wrapper.style.width = '100%';
-    
+
     const inner = document.createElement('div');
     inner.className = `message-bubble ${isYou ? 'you' : ''}`;
     inner.style.padding = '10px 14px';
@@ -115,12 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
     inner.style.maxWidth = '85%';
     inner.style.wordBreak = 'break-word';
     inner.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
-    
+
     const textNode = document.createElement('span');
     textNode.className = 'bubble-text';
     textNode.textContent = text + (isInterim ? '...' : '');
     inner.appendChild(textNode);
-    
+
     const timeSpan = document.createElement('div');
     timeSpan.className = 'message-time';
     timeSpan.style.textAlign = isYou ? 'right' : 'left';
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     timeSpan.style.fontSize = '0.7rem';
     timeSpan.style.opacity = '0.7';
     timeSpan.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     inner.appendChild(timeSpan);
     wrapper.appendChild(inner);
     return wrapper;
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         container.appendChild(finalBubble);
       }
-      
+
       const existing = container.getAttribute('data-final') || '';
       container.setAttribute('data-final', existing + finalText + ' ');
     }
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const remoteAudio = document.getElementById('remoteAudio');
       if (remoteAudio) {
         remoteAudio.srcObject = remoteStream;
-        remoteAudio.play().catch(() => {});
+        remoteAudio.play().catch(() => { });
       }
     });
 
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ========== DATA CONNECTION ==========
   const handleDataConnection = (conn) => {
     dataConnection = conn;
-    
+
     conn.on('open', () => {
       console.log('🔗 Data connection open');
     });
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeCall && currentCall) {
       try { currentCall.close(); } catch (e) { /* ignore */ }
     }
-    
+
     if (dataConnection) {
       try { dataConnection.close(); } catch (e) { /* ignore */ }
       dataConnection = null;
@@ -323,14 +323,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reset captions
-    if (youCaption) { 
-      youCaption.removeAttribute('data-final'); 
-      youCaption.innerHTML = '<span class="caption-placeholder">Speaker 1 captions appear here...</span>'; 
+    if (youCaption) {
+      youCaption.removeAttribute('data-final');
+      youCaption.innerHTML = '<span class="caption-placeholder">Speaker 1 captions appear here...</span>';
       youCaption.interimBubble = null;
     }
-    if (themCaption) { 
+    if (themCaption) {
       themCaption.removeAttribute('data-final');
-      themCaption.innerHTML = '<span class="caption-placeholder">Speaker 2 captions appear here...</span>'; 
+      themCaption.innerHTML = '<span class="caption-placeholder">Speaker 2 captions appear here...</span>';
       themCaption.interimBubble = null;
     }
     if (muteBtn) { muteBtn.classList.remove('active'); muteBtn.querySelector('span:last-child').innerText = 'Mute'; }
@@ -343,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:8080'
-      : 'https://communication-site-production.up.railway.app';
+      : 'https://communication-site.onrender.com';
 
     // Build the transcript summary based on what was said
     const transcriptText = fullConversationTranscript.trim() ? fullConversationTranscript.trim() : `Call with ${contactName} — ${duration}s — ${new Date().toLocaleString()}`;

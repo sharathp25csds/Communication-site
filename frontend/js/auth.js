@@ -3,8 +3,8 @@
  * Handles Login, Signup, JWT management, and Dashboard protection
  */
 
-const API_BASE_URL = 'https://communication-site-production.up.railway.app/api';
-const API_AUTH_URL = `${API_BASE_URL}/auth`;
+const API_BASE_URL = 'https://communication-site-production.up.railway.app';
+const API_AUTH_URL = `${API_BASE_URL}/api/auth`;
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements

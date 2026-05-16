@@ -34,13 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const API_BASE = 'https://communication-site-production.up.railway.app/api';
+            const API_BASE = 'https://communication-site-production.up.railway.app';
 
             // We add a short timeout using AbortController to prevent hanging
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-            const response = await fetch(`${API_BASE}/ai/chat`, {
+            const response = await fetch(`${API_BASE}/api/ai/chat`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({ message }),

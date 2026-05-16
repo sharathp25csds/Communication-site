@@ -85,9 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const API_BASE = 'https://communication-site-production.up.railway.app/api';
+            const API_BASE = 'https://communication-site-production.up.railway.app';
 
-            const response = await fetch(`${API_BASE}/reports/create`, {
+            const response = await fetch(`${API_BASE}/api/reports/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

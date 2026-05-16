@@ -8,8 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('vb_token');
     const user = JSON.parse(localStorage.getItem('vb_user') || 'null');
 
-    const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') && window.location.port !== '5000'
-        ? 'http://localhost:5000/api' : '/api';
+    const API_BASE = 'https://communication-site-production.up.railway.app/api';
 
     // Dashboard Protection
     const isDashboardVisible = () => {

@@ -34,8 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') && window.location.port !== '5000'
-                ? 'http://localhost:5000/api' : '/api';
+            const API_BASE = 'https://communication-site-production.up.railway.app/api';
 
             // We add a short timeout using AbortController to prevent hanging
             const controller = new AbortController();

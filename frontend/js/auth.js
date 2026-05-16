@@ -3,9 +3,7 @@
  * Handles Login, Signup, JWT management, and Dashboard protection
  */
 
-const API_BASE_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') && window.location.port !== '5000'
-    ? 'http://localhost:5000/api'
-    : '/api';
+const API_BASE_URL = 'https://communication-site-production.up.railway.app/api';
 const API_AUTH_URL = `${API_BASE_URL}/auth`;
 
 document.addEventListener('DOMContentLoaded', () => {

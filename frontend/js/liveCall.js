@@ -341,8 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('vb_token');
     if (!token) return;
 
-    const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') && window.location.port !== '5000'
-      ? 'http://localhost:5000/api' : '/api';
+    const API_BASE = 'https://communication-site-production.up.railway.app/api';
 
     // Build the transcript summary based on what was said
     const transcriptText = fullConversationTranscript.trim() ? fullConversationTranscript.trim() : `Call with ${contactName} — ${duration}s — ${new Date().toLocaleString()}`;

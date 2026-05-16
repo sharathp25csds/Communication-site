@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const authEmailInput = document.getElementById('authEmail');
     const authPasswordInput = document.getElementById('authPassword');
     const authNameInput = document.getElementById('authName');
-    
+
     // UI elements for logged in state
     const navAuthBtn = document.getElementById('navAuthBtn');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (navAuthBtn) navAuthBtn.style.display = 'block';
             if (logoutBtn) logoutBtn.style.display = 'none';
             if (dashboardSection) dashboardSection.style.display = 'none';
-            
+
             // If we are on a page that requires auth, redirect (optional depending on UX)
             // if (window.location.hash === '#userDashboard') window.location.hash = '#Home';
         }
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         authSwitchBtn.addEventListener('click', (e) => {
             e.preventDefault();
             isLoginMode = !isLoginMode;
-            
+
             authTitle.innerText = isLoginMode ? 'Login to VoiceBridge' : 'Create an Account';
             authSubmitBtn.innerText = isLoginMode ? 'Login' : 'Sign up';
             authSwitchText.innerText = isLoginMode ? "Don't have an account?" : "Already have an account?";
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authSubmitBtn) {
         authSubmitBtn.addEventListener('click', async (e) => {
             e.preventDefault(); // Prevent any default form behavior
-            
+
             if (authSubmitBtn.disabled) return; // Prevent double submission
 
             const email = authEmailInput.value.trim();
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const originalBtnText = authSubmitBtn.innerText;
                 authSubmitBtn.innerText = isLoginMode ? 'Logging in...' : 'Creating account...';
                 authError.style.display = 'none';
-                
+
                 const response = await fetch(`${API_AUTH_URL}${endpoint}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -119,9 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('✅ [Auth] Success');
                     localStorage.setItem('vb_token', data.token);
                     localStorage.setItem('vb_user', JSON.stringify(data.user));
-                    
+
                     showSuccess(data.message || 'Success!');
-                    
+
                     setTimeout(() => {
                         closeAuthModal();
                         window.location.hash = '#userDashboard';

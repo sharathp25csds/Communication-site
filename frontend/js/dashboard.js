@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (repRes.ok && reportsBody) {
                 const repData = await repRes.json();
                 const reports = repData.reports || [];
-                
+
                 if (reports.length > 0) {
                     reportsBody.innerHTML = '';
                     reports.forEach(r => {

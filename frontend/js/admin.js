@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminLogoutBtn = document.getElementById('adminLogoutBtn');
     const adminError = document.getElementById('adminError');
     
-        const API_BASE = 'https://communication-site-production.up.railway.app';
+    const API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
+        ? import.meta.env.VITE_API_URL 
+        : '';
 
     // Helper: Close Modal
     const closeAdminModal = (modal) => {
@@ -32,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Load Stats
-            const statsRes = await fetch(`${API_BASE}/api/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const statsRes = await fetch(`${API}/api/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!statsRes.ok) throw new Error('Unauthorized');
             const statsData = await statsRes.json();
             
@@ -45,17 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Load Users
-            const usersRes = await fetch(`${API_BASE}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const usersRes = await fetch(`${API}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
             const usersData = await usersRes.json();
             if (usersData.success) renderUsersTable(usersData.users, 'usersTable', false);
 
             // Load Transcripts
-            const callsRes = await fetch(`${API_BASE}/api/admin/calls`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const callsRes = await fetch(`${API}/api/admin/calls`, { headers: { 'Authorization': `Bearer ${token}` } });
             const callsData = await callsRes.json();
             if (callsData.success) renderCallsTable(callsData.calls);
 
             // Load Reports
-            const reportsRes = await fetch(`${API_BASE}/api/admin/reports`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const reportsRes = await fetch(`${API}/api/admin/reports`, { headers: { 'Authorization': `Bearer ${token}` } });
             const reportsData = await reportsRes.json();
             if (reportsData.success) renderReportsTable(reportsData.reports);
 
@@ -132,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminLoginBtn.disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                const response = await fetch(`${API}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -322,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateReportStatus = async (id, status) => {
         const token = localStorage.getItem('vb_admin_token');
         try {
-            await fetch(`${API_BASE}/api/reports/status/${id}`, {
+            await fetch(`${API}/api/reports/status/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

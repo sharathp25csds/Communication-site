@@ -3,8 +3,11 @@
  * Handles Login, Signup, JWT management, and Dashboard protection
  */
 
-const API_BASE_URL = 'https://communication-site-production.up.railway.app';
-const API_AUTH_URL = `${API_BASE_URL}/api/auth`;
+const API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
+    ? import.meta.env.VITE_API_URL 
+    : ''; // Fallback to relative or set via build
+
+const API_AUTH_URL = `${API}/api/auth`;
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements

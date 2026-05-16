@@ -341,14 +341,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('vb_token');
     if (!token) return;
 
-    const API_BASE = 'https://communication-site-production.up.railway.app';
+    const API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
+      ? import.meta.env.VITE_API_URL 
+      : '';
 
     // Build the transcript summary based on what was said
     const transcriptText = fullConversationTranscript.trim() ? fullConversationTranscript.trim() : `Call with ${contactName} — ${duration}s — ${new Date().toLocaleString()}`;
     fullConversationTranscript = ''; // Reset for next call
 
     try {
-      await fetch(`${API_BASE}/api/calls/transcript`, {
+      await fetch(`${API}/api/calls/transcript`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

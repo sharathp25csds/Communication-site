@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('vb_token');
     const user = JSON.parse(localStorage.getItem('vb_user') || 'null');
 
-    const API_BASE = 'https://communication-site-production.up.railway.app';
+    const API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) 
+        ? import.meta.env.VITE_API_URL 
+        : '';
 
     // Dashboard Protection
     const isDashboardVisible = () => {
@@ -58,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Fetch Calls
-            const res = await fetch(`${API_BASE}/api/calls/history`, {
+            const res = await fetch(`${API}/api/calls/history`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -97,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Fetch Reports
-            const repRes = await fetch(`${API_BASE}/api/reports`, {
+            const repRes = await fetch(`${API}/api/reports`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (repRes.ok && reportsBody) {

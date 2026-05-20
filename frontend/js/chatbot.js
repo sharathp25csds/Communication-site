@@ -14,11 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
     addMessage('Bridge Assistant', 'Hello! I am Bridge, your accessibility communication assistant. How can I help you today?', false);
 
     // Enter-to-send is naturally handled by the form submit event
+    let isSending = false;
+
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        if (isSending) return;
+
         const message = chatInput.value.trim();
         if (!message) return;
+
+        isSending = true;
+        if (chatInput) chatInput.disabled = true;
 
         // Display user message
         addMessage('You', message, true);
@@ -36,10 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'http://localhost:8080'
-                : 'https://communication-site.onrender.com';
+                : window.location.origin;
+
             // We add a short timeout using AbortController to prevent hanging
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
             const response = await fetch(`${API}/api/ai/chat`, {
                 method: 'POST',
@@ -51,33 +59,38 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(timeoutId);
             removeTypingIndicator(typingId);
 
-            if (!response.ok) {
-                let errData;
-                try {
-                    errData = await response.json();
-                } catch (e) { }
-                throw new Error((errData && errData.error) ? errData.error : `Server returned ${response.status}`);
+            const responseText = await response.text();
+            let data;
+            try {
+                data = responseText ? JSON.parse(responseText) : null;
+            } catch (e) {
+                throw new Error('Invalid response from server');
             }
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error((data && data.error) ? data.error : `Server returned ${response.status}`);
+            }
 
-            if (data.success && data.reply) {
+            if (data && data.success && data.reply) {
                 addMessage('Bridge Assistant', data.reply, false);
             } else {
-                throw new Error(data.error || 'Failed to get a response');
+                throw new Error((data && data.error) ? data.error : 'Failed to get a response from the AI Assistant');
             }
         } catch (error) {
             removeTypingIndicator(typingId);
             console.error('AI Chat Error:', error);
 
             let errorMsg = 'Sorry, I am having trouble connecting to my servers right now.';
-            if (error.name === 'AbortError') {
+            if (error.name === 'AbortError' || error.message.includes('timed out')) {
                 errorMsg = 'The request timed out. Please check your connection and try again.';
             } else if (error.message.includes('401')) {
                 errorMsg = 'Please log in to use the AI Assistant.';
             }
 
             addMessage('System', errorMsg, false, true);
+        } finally {
+            isSending = false;
+            if (chatInput) chatInput.disabled = false;
         }
     });
 

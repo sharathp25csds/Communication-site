@@ -31,19 +31,19 @@ const chatWithAI = async (req, res, next) => {
   try {
     const { message, language } = req.body;
     
-    if (!message) {
+    if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({ success: false, error: "Message is required" });
     }
 
-    const apiKey = process.env.Gemini_API_Key || process.env.AI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.Gemini_API_Key || process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
-      console.error('❌ [AI Controller] No API key found in env: Gemini_API_Key or AI_API_KEY');
+      console.error('❌ [AI Controller] No API key found in env: GEMINI_API_KEY, Gemini_API_Key, AI_API_KEY, or OPENAI_API_KEY');
       return res.status(500).json({ success: false, error: "AI API key not configured" });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }, { timeout: 30000 });
 
     const prompt = `You are an accessibility communication assistant for VoiceBridge, a platform for people with speech and hearing disabilities.
 Your goals:
@@ -51,13 +51,25 @@ Your goals:
 - Provide concise responses.
 - Use accessible language.
 - Provide communication support and accessibility help.
-- Respond in the language requested or inferred from the input. Target language: ${language || 'Auto-detect'}.
+- Respond in the language requested or inferred from the input. Target language: ${language || 'auto-detect'}.
 
 User Message: ${message}`;
 
     console.log('📡 [AI Controller] Sending request to Gemini for user:', req.user?.id);
     const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    let responseText = '';
+
+    if (result?.response?.text) {
+      responseText = result.response.text();
+    }
+    if (!responseText && Array.isArray(result?.response?.candidates) && result.response.candidates.length > 0) {
+      const candidate = result.response.candidates[0];
+      const parts = candidate?.content?.parts || [];
+      responseText = parts.map(part => part.text || '').join(' ').trim();
+    }
+    if (!responseText) {
+      responseText = 'Sorry, I could not generate a response at this time. Please try again.';
+    }
     console.log('✅ [AI Controller] Gemini response received, length:', responseText.length);
 
     // Save chat to database — req.user is guaranteed by protect middleware

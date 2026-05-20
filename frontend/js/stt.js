@@ -23,6 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    const renderLiveTranscript = () => {
+        const liveText = (accumulatedTranscript + interimChunk).trim();
+        if (!sttOutput) return;
+
+        if (liveText) {
+            sttOutput.innerHTML = `<div class="stt-listening-indicator"><div class="stt-wave"><span></span><span></span><span></span><span></span><span></span></div><p>${liveText}</p></div>`;
+        } else {
+            sttOutput.innerHTML = '<div class="stt-listening-indicator"><div class="stt-wave"><span></span><span></span><span></span><span></span><span></span></div><p>Listening… speak now. Transcript will appear when you stop.</p></div>';
+        }
+    };
+
     const createRecognition = () => {
         const rec = new SpeechRecognition();
         rec.continuous = true;
@@ -42,20 +53,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (finalText) accumulatedTranscript += finalText;
             interimChunk = interimText;
+            renderLiveTranscript();
         };
 
         rec.onerror = (event) => {
             console.error('❌ STT Error:', event.error);
-            if (event.error === 'not-allowed') {
+            const errorText = event.error;
+            if (errorText === 'not-allowed' || errorText === 'permission-denied' || errorText === 'service-not-allowed') {
                 stopSTT();
                 if (sttOutput) sttOutput.innerHTML = '<div class="stt-error">🚫 Microphone access denied. Please allow microphone permission.</div>';
+            } else if (errorText === 'no-speech' || errorText === 'audio-capture') {
+                if (sttOutput) sttOutput.innerHTML = '<div class="stt-error">🚫 No audio was detected. Please check your microphone and try again.</div>';
+            } else if (errorText === 'aborted') {
+                if (sttOutput) sttOutput.innerHTML = '<div class="stt-error">🚫 Voice capture was interrupted. Please try again.</div>';
             }
         };
 
         rec.onend = () => {
             if (isListening && recognition) {
-                try { recognition.start(); } catch (e) { /* already running */ }
+                try { recognition.start(); } catch (e) { console.warn('STT restart skipped:', e); }
             }
+        };
+
+        rec.onnomatch = () => {
+            if (sttOutput) sttOutput.innerHTML = '<div class="stt-error">No speech recognized. Please try again.</div>';
         };
 
         return rec;

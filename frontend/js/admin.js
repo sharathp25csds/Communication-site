@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminError = document.getElementById('adminError');
     const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:8080'
-        : 'https://communication-site.onrender.com';
+        : window.location.origin;
     // Helper: Close Modal
     const closeAdminModal = (modal) => {
         if (modal) {

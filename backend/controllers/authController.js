@@ -49,7 +49,11 @@ const signup = async (req, res, next) => {
       token
     });
   } catch (error) {
-    console.error('❌ Signup error:', error.message);
+    console.error('❌ [Auth Controller] Signup error:', {
+      message: error.message,
+      stack: error.stack,
+      email: req.body?.email
+    });
     next(error);
   }
 };
@@ -91,7 +95,11 @@ const login = async (req, res, next) => {
       res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
-    console.error('❌ Login error:', error.message);
+    console.error('❌ [Auth Controller] Login error:', {
+      message: error.message,
+      stack: error.stack,
+      email: req.body?.email
+    });
     next(error);
   }
 };

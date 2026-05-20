@@ -41,9 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const API = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                ? 'http://localhost:8080'
-                : window.location.origin;
+        const API =
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8080'
+            : 'https://communication-site.onrender.com';
 
             // We add a short timeout using AbortController to prevent hanging
             const controller = new AbortController();

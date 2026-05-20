@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            const API = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
                 ? 'http://localhost:8080'
                 : window.location.origin;
 
@@ -60,21 +60,29 @@ document.addEventListener('DOMContentLoaded', () => {
             removeTypingIndicator(typingId);
 
             const responseText = await response.text();
-            let data;
-            try {
-                data = responseText ? JSON.parse(responseText) : null;
-            } catch (e) {
-                throw new Error('Invalid response from server');
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                try { data = responseText ? JSON.parse(responseText) : null; } catch (e) { data = null; }
             }
 
             if (!response.ok) {
-                throw new Error((data && data.error) ? data.error : `Server returned ${response.status}`);
+                const remoteMsg = data && (data.error || data.message) ? (data.error || data.message) : responseText;
+                console.error('[AI Chat] Bad response', { url: `${API}/api/ai/chat`, status: response.status, bodyPreview: String(remoteMsg).slice(0,200) });
+                throw new Error((data && (data.error || data.message)) ? (data.error || data.message) : `Server returned ${response.status}`);
             }
 
-            if (data && data.success && data.reply) {
+            if (!data) {
+                // non-JSON but OK response — show raw text
+                if (responseText && responseText.trim()) {
+                    addMessage('Bridge Assistant', responseText.trim(), false);
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+            } else if (data && data.success && data.reply) {
                 addMessage('Bridge Assistant', data.reply, false);
             } else {
-                throw new Error((data && data.error) ? data.error : 'Failed to get a response from the AI Assistant');
+                throw new Error((data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to get a response from the AI Assistant');
             }
         } catch (error) {
             removeTypingIndicator(typingId);

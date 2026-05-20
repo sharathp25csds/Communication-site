@@ -382,6 +382,20 @@
   gap: 0.35rem;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Fix: Prevent action-button cell from being clipped by data-table td constraints */
+.data-table td:last-child {
+  overflow: visible;
+  white-space: normal;
+  max-width: none;
+}
+.data-table td:last-child > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .btn-report-action:disabled {

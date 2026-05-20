@@ -57,16 +57,23 @@ User Message: ${message}`;
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
-    // Optionally store in database
+    // Save chat to database — req.user is guaranteed by protect middleware
     if (req.user && req.user.id) {
       try {
         await db.execute(
           'INSERT INTO ai_chats (user_id, message, reply) VALUES (?, ?, ?)',
           [req.user.id, message, responseText]
         );
+        console.log('✅ [AI Controller] Chat saved to DB for user:', req.user.id);
       } catch (dbErr) {
-        console.error("Failed to save AI chat to DB:", dbErr);
+        console.error('❌ [AI Controller] Failed to save AI chat to DB:', {
+          userId: req.user.id,
+          error: dbErr.message,
+          code: dbErr.code
+        });
       }
+    } else {
+      console.warn('⚠️ [AI Controller] req.user missing — chat not saved. Token may have failed silently.');
     }
 
     res.json({
@@ -74,8 +81,8 @@ User Message: ${message}`;
       reply: responseText
     });
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ success: false, error: "Failed to communicate with AI Assistant" });
+    console.error('❌ [AI Controller] Gemini API Error:', error.message);
+    res.status(500).json({ success: false, error: 'Failed to communicate with AI Assistant' });
   }
 };
 

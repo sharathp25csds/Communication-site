@@ -26,8 +26,8 @@ const signup = async (req, res, next) => {
 
     // Create user
     const [result] = await db.execute(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword]
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, 'user']
     );
 
     const userId = result.insertId;
@@ -35,17 +35,21 @@ const signup = async (req, res, next) => {
     // Generate token
     const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
+    console.log('✅ [Auth Controller] User registered successfully:', email);
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
       user: {
         id: userId,
         name,
-        email
+        email,
+        role: 'user'
       },
       token
     });
   } catch (error) {
+    console.error('❌ Signup error:', error.message);
     next(error);
   }
 };
@@ -69,6 +73,8 @@ const login = async (req, res, next) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
+      console.log('✅ [Auth Controller] Login successful:', email);
+
       res.json({
         success: true,
         message: 'Login successful',
@@ -81,9 +87,11 @@ const login = async (req, res, next) => {
         token
       });
     } else {
+      console.log('❌ [Auth Controller] Invalid credentials for:', email);
       res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
+    console.error('❌ Login error:', error.message);
     next(error);
   }
 };

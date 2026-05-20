@@ -20,15 +20,15 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
-      return next();
+      next();
     } catch (error) {
-      console.error('❌ [Auth Middleware] Token verification failed:', error.message);
-      return res.status(401).json({ message: 'Not authorized, token failed' });
+      console.error(error);
+      res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
 
   if (!token) {
-    return res.status(401).json({ message: 'Not authorized, no token' });
+    res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
 

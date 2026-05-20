@@ -8,10 +8,10 @@ const getAdminStats = async (req, res, next) => {
     const [[calls]] = await db.query('SELECT COUNT(*) as count FROM calls');
     const [[reports]] = await db.query('SELECT COUNT(*) as count FROM reports');
     const [[aiChats]] = await db.query('SELECT COUNT(*) as count FROM ai_chats');
-    
+
     // Recent activity
     const [recentUsers] = await db.query('SELECT id, name, email, created_at FROM users WHERE role != "admin" ORDER BY created_at DESC LIMIT 5');
-    
+
     res.json({
       success: true,
       stats: {
@@ -23,7 +23,6 @@ const getAdminStats = async (req, res, next) => {
       recentUsers
     });
   } catch (error) {
-    console.error('❌ [Admin Controller] getAdminStats error:', error);
     next(error);
   }
 };
@@ -33,12 +32,11 @@ const getAdminCalls = async (req, res, next) => {
     const [calls] = await db.query(`
       SELECT c.id, c.duration, c.created_at, c.contact_name, c.language, c.transcript, u.name as user_name 
       FROM calls c 
-      LEFT JOIN users u ON c.user_id = u.id 
+      JOIN users u ON c.user_id = u.id 
       ORDER BY c.created_at DESC LIMIT 50
     `);
     res.json({ success: true, calls });
   } catch (error) {
-    console.error('❌ [Admin Controller] getAdminCalls error:', error);
     next(error);
   }
 };
@@ -48,12 +46,11 @@ const getAdminReports = async (req, res, next) => {
     const [reports] = await db.query(`
       SELECT r.*, u.name as user_name, u.email as user_email
       FROM reports r 
-      LEFT JOIN users u ON r.user_id = u.id 
+      JOIN users u ON r.user_id = u.id 
       ORDER BY r.created_at DESC
     `);
     res.json({ success: true, reports });
   } catch (error) {
-    console.error('❌ [Admin Controller] getAdminReports error:', error);
     next(error);
   }
 };
@@ -63,24 +60,8 @@ const getAdminUsers = async (req, res, next) => {
     const [users] = await db.query('SELECT id, name, email, created_at FROM users WHERE role != "admin" ORDER BY created_at DESC');
     res.json({ success: true, users });
   } catch (error) {
-    console.error('❌ [Admin Controller] getAdminUsers error:', error);
     next(error);
   }
 };
 
-const getAdminChats = async (req, res, next) => {
-  try {
-    const [chats] = await db.query(`
-      SELECT c.id, c.message, c.reply, c.created_at, u.name as user_name 
-      FROM ai_chats c 
-      LEFT JOIN users u ON c.user_id = u.id 
-      ORDER BY c.created_at DESC LIMIT 100
-    `);
-    res.json({ success: true, chats });
-  } catch (error) {
-    console.error('❌ [Admin Controller] getAdminChats error:', error);
-    next(error);
-  }
-};
-
-module.exports = { getAdminStats, getAdminCalls, getAdminReports, getAdminUsers, getAdminChats };
+module.exports = { getAdminStats, getAdminCalls, getAdminReports, getAdminUsers };

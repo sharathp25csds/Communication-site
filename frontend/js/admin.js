@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:8080'
         : 'https://communication-site.onrender.com';
-        
     // Helper: Close Modal
     const closeAdminModal = (modal) => {
         if (modal) {
@@ -27,95 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => closeAdminModal(adminLoginModal));
     });
 
-    let allUsers = [];
-    let allCalls = [];
-    let allReports = [];
-    let allChats = [];
-    let refreshInterval = null;
-
-    const startPolling = () => {
-        if (refreshInterval) clearInterval(refreshInterval);
-        refreshInterval = setInterval(loadAdminData, 5000);
-        console.log('🔄 [Admin Portal] Polling started (5s interval)');
-    };
-
-    const stopPolling = () => {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-            refreshInterval = null;
-            console.log('🔄 [Admin Portal] Polling stopped');
-        }
-    };
-
-    const filterAndRenderUsers = () => {
-        const query = document.getElementById('usersSearch')?.value.toLowerCase().trim() || '';
-        const filtered = allUsers.filter(u => 
-            (u.name && u.name.toLowerCase().includes(query)) || 
-            (u.email && u.email.toLowerCase().includes(query))
-        );
-        renderUsersTable(filtered, 'usersTable', false);
-        
-        // Update user count header
-        const countSpan = document.getElementById('usersCount');
-        if (countSpan) {
-            countSpan.innerText = `${filtered.length} user${filtered.length !== 1 ? 's' : ''}`;
-        }
-    };
-
-    const filterAndRenderCalls = () => {
-        const query = document.getElementById('transcriptsSearch')?.value.toLowerCase().trim() || '';
-        const filtered = allCalls.filter(c => 
-            (c.user_name && c.user_name.toLowerCase().includes(query)) ||
-            (c.contact_name && c.contact_name.toLowerCase().includes(query)) ||
-            (c.transcript && c.transcript.toLowerCase().includes(query)) ||
-            (c.language && c.language.toLowerCase().includes(query))
-        );
-        renderCallsTable(filtered);
-        
-        // Update transcripts count header
-        const countSpan = document.getElementById('transcriptsCount');
-        if (countSpan) {
-            countSpan.innerText = `${filtered.length} transcript${filtered.length !== 1 ? 's' : ''}`;
-        }
-    };
-
-    const filterAndRenderReports = () => {
-        const statusFilter = document.getElementById('reportStatusFilter')?.value || '';
-        const filtered = allReports.filter(r => 
-            !statusFilter || r.status.toLowerCase() === statusFilter.toLowerCase()
-        );
-        renderReportsTable(filtered);
-        
-        // Update reports count header
-        const countSpan = document.getElementById('reportsCount');
-        if (countSpan) {
-            countSpan.innerText = `${filtered.length} report${filtered.length !== 1 ? 's' : ''}`;
-        }
-    };
-
-    const filterAndRenderChats = () => {
-        const query = document.getElementById('chatsSearch')?.value.toLowerCase().trim() || '';
-        const filtered = allChats.filter(c => 
-            (c.user_name && c.user_name.toLowerCase().includes(query)) ||
-            (c.message && c.message.toLowerCase().includes(query)) ||
-            (c.reply && c.reply.toLowerCase().includes(query))
-        );
-        renderChatsTable(filtered);
-        
-        // Update chats count header
-        const countSpan = document.getElementById('chatsCount');
-        if (countSpan) {
-            countSpan.innerText = `${filtered.length} conversation${filtered.length !== 1 ? 's' : ''}`;
-        }
-    };
-
     const loadAdminData = async () => {
         const token = localStorage.getItem('vb_admin_token');
         if (!token) return logout();
 
         try {
-            console.log('🔄 [Admin Portal] Fetching latest admin panel data...');
-            
             // Load Stats
             const statsRes = await fetch(`${API}/api/admin/stats`, { headers: { 'Authorization': `Bearer ${token}` } });
             if (!statsRes.ok) throw new Error('Unauthorized');
@@ -126,52 +41,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('totalCalls').innerText = statsData.stats.totalCalls;
                 document.getElementById('totalReports').innerText = statsData.stats.totalReports;
                 document.getElementById('totalChats').innerText = statsData.stats.totalAiChats;
-                
-                // Render recent users using helper
                 renderUsersTable(statsData.recentUsers, 'usersTable', true);
             }
 
             // Load Users
             const usersRes = await fetch(`${API}/api/admin/users`, { headers: { 'Authorization': `Bearer ${token}` } });
             const usersData = await usersRes.json();
-            if (usersData.success) {
-                allUsers = usersData.users;
-                filterAndRenderUsers();
-            }
+            if (usersData.success) renderUsersTable(usersData.users, 'usersTable', false);
 
             // Load Transcripts
             const callsRes = await fetch(`${API}/api/admin/calls`, { headers: { 'Authorization': `Bearer ${token}` } });
             const callsData = await callsRes.json();
-            if (callsData.success) {
-                allCalls = callsData.calls;
-                filterAndRenderCalls();
-            }
+            if (callsData.success) renderCallsTable(callsData.calls);
 
             // Load Reports
             const reportsRes = await fetch(`${API}/api/admin/reports`, { headers: { 'Authorization': `Bearer ${token}` } });
             const reportsData = await reportsRes.json();
-            if (reportsData.success) {
-                allReports = reportsData.reports;
-                filterAndRenderReports();
-            }
-
-            // Load Chats
-            const chatsRes = await fetch(`${API}/api/admin/chats`, { headers: { 'Authorization': `Bearer ${token}` } });
-            const chatsData = await chatsRes.json();
-            if (chatsData.success) {
-                allChats = chatsData.chats;
-                filterAndRenderChats();
-            }
+            if (reportsData.success) renderReportsTable(reportsData.reports);
 
         } catch (e) {
-            console.error('❌ [Admin Portal] Error loading data:', e);
+            console.error(e);
             logout();
         }
     };
 
     const logout = (showToastAndDelay = false) => {
         console.log('✅ Admin logout started');
-        stopPolling();
 
         // Remove all admin-related auth persistence safely
         localStorage.removeItem('vb_admin_token');
@@ -251,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('vb_admin_token', data.token);
                     console.log('✅ Admin authenticated');
                     loadAdminData();
-                    startPolling();
                 } else {
                     if (adminError) {
                         adminError.innerText = response.ok ? 'Not authorized as admin' : (data.message || 'Invalid credentials');
@@ -278,42 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Bind real-time search and filter controls
-    const usersSearchInput = document.getElementById('usersSearch');
-    if (usersSearchInput) {
-        usersSearchInput.addEventListener('input', filterAndRenderUsers);
-    }
-
-    const transcriptsSearchInput = document.getElementById('transcriptsSearch');
-    if (transcriptsSearchInput) {
-        transcriptsSearchInput.addEventListener('input', filterAndRenderCalls);
-    }
-
-    const chatsSearchInput = document.getElementById('chatsSearch');
-    if (chatsSearchInput) {
-        chatsSearchInput.addEventListener('input', filterAndRenderChats);
-    }
-
-    const reportFilterSelect = document.getElementById('reportStatusFilter');
-    if (reportFilterSelect) {
-        reportFilterSelect.addEventListener('change', filterAndRenderReports);
-    }
-
-    const refreshReportsBtn = document.getElementById('refreshReportsBtn');
-    if (refreshReportsBtn) {
-        refreshReportsBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            loadAdminData();
-            showToast('Dashboard data refreshed successfully', 'success');
-        });
-    }
-
     // Check admin auth on load
     if (localStorage.getItem('vb_admin_token')) {
         if (adminLoginModal) adminLoginModal.style.display = 'none';
         if (adminDashboard) adminDashboard.style.display = 'block';
         loadAdminData();
-        startPolling();
     }
 
     // Sidebar navigation
@@ -345,36 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderUsersTable(users, tableId, isRecent) {
         const tbody = document.querySelector(`#${tableId} tbody`);
         if (!tbody) return;
+        if (!users || users.length === 0) return;
 
-        // Clear only when not appending recent list
-        if (!isRecent) {
-            tbody.innerHTML = '';
-        }
-
-        if (!users || users.length === 0) {
-            if (!isRecent && tbody.children.length === 0) {
-                tbody.innerHTML = `
-                    <tr class="empty-state">
-                        <td colspan="4">
-                            <div class="empty-state-inline">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                </svg>
-                                <span>No users found</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-            return;
-        }
-
-        // Clean up empty-state row if we are appending recent list
-        if (isRecent) {
-            const emptyStateRow = tbody.querySelector('.empty-state');
-            if (emptyStateRow) emptyStateRow.remove();
-        }
+        if (!isRecent) tbody.innerHTML = '';
 
         users.forEach(u => {
             const tr = document.createElement('tr');
@@ -422,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td>#${c.id}</td>
-                <td><strong>${c.user_name || 'Guest'}</strong></td>
+                <td><strong>${c.user_name}</strong></td>
                 <td>${c.contact_name || 'Unknown'}</td>
                 <td>${formatDur}</td>
                 <td>${startD.toLocaleTimeString()}</td>
@@ -461,8 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td>#${r.id}</td>
-                <td><strong>${r.user_name || 'Guest'}</strong></td>
-                <td>${r.user_email || 'N/A'}</td>
+                <td><strong>${r.user_name}</strong></td>
+                <td>${r.user_email}</td>
                 <td>${r.subject || r.issue_type}</td>
                 <td title="${r.description}">${r.description.substring(0, 40)}...</td>
                 <td>${d.toLocaleString()}</td>
@@ -482,51 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function renderChatsTable(chats) {
-        const tbody = document.querySelector('#chatsTable tbody');
-        if (!tbody) return;
-        if (!chats || chats.length === 0) {
-            tbody.innerHTML = `
-                <tr class="empty-state">
-                    <td colspan="5">
-                        <div class="empty-state-inline" style="display:flex; flex-direction:column; align-items:center; padding: 2rem; color:var(--muted-foreground);">
-                            <span style="font-size:2rem; margin-bottom:1rem;">💬</span>
-                            <span>No chats found. Conversations with Bridge AI will appear here.</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = '';
-        chats.forEach(c => {
-            const d = new Date(c.created_at);
-            
-            // User Row
-            const userTr = document.createElement('tr');
-            userTr.innerHTML = `
-                <td>#${c.id}-U</td>
-                <td><strong>${c.user_name || 'Guest'}</strong></td>
-                <td><span class="badge badge-info" style="font-size:0.75rem;">User</span></td>
-                <td>${c.message}</td>
-                <td>${d.toLocaleString()}</td>
-            `;
-            tbody.appendChild(userTr);
-
-            // AI Row
-            const aiTr = document.createElement('tr');
-            aiTr.innerHTML = `
-                <td>#${c.id}-A</td>
-                <td><strong>Bridge AI</strong></td>
-                <td><span class="badge badge-success" style="font-size:0.75rem;">AI</span></td>
-                <td>${c.reply}</td>
-                <td>${d.toLocaleString()}</td>
-            `;
-            tbody.appendChild(aiTr);
-        });
-    }
-
     // Expose for inline buttons
     window.updateReportStatus = async (id, status) => {
         const token = localStorage.getItem('vb_admin_token');
@@ -541,7 +332,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             loadAdminData(); // Refresh UI
         } catch (err) {
-            console.error('❌ [Admin Portal] Error updating report status:', err);
+            console.error(err);
         }
     };
 });
+

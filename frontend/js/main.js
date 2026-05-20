@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const bindEvent = (selector, event, callback) => {
         const elements = document.querySelectorAll(selector);
         if (elements.length === 0) {
-            // Only log if it's a critical ID that should exist
             if (selector.startsWith('#')) {
                 console.warn(`⚠️ Element not found for selector: ${selector}`);
             }
@@ -28,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) {
             modal.removeAttribute('inert');
             modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            document.body.style.overflow = 'hidden';
             console.log(`🔓 Opened modal: ${modalId}`);
         }
     };
@@ -37,12 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modal) {
             modal.setAttribute('inert', '');
             modal.style.display = 'none';
-            document.body.style.overflow = ''; // Restore scrolling
+            document.body.style.overflow = '';
             console.log(`🔒 Closed modal: ${modal.id}`);
         }
     };
 
-    // Universal Close Handler for all modals
     const closeAllModals = () => {
         document.querySelectorAll('.modal').forEach(m => closeModal(m));
     };
@@ -52,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModal(modal);
     });
 
-    // Escape key to close modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeAllModals();
     });
@@ -96,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    subject: formData.type, // Using issue type as subject for now
+                    subject: formData.type,
                     issue_type: formData.type,
                     description: formData.message,
                     priority: 'medium'
@@ -141,6 +138,17 @@ document.addEventListener('DOMContentLoaded', () => {
         openModal('authModal');
     });
 
+    // --- Logout ---
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('vb_token');
+            localStorage.removeItem('vb_user');
+            window.location.href = '/';
+        });
+    }
+
     // --- Navigation ---
     const scrollToId = (id) => {
         const target = document.getElementById(id);
@@ -171,9 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
     bindEvent('#adminPortalBtn', 'click', () => {
         window.location.href = 'admin.html';
     });
-
-    // --- Dashboard Specifics ---
-    // Note: #dashboardSuiteBtn is now handled in dashboard.js for better view switching
 
     bindEvent('#openCallModal', 'click', () => {
         openModal('callModal');

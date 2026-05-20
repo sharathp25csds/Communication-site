@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add initial greeting message
     addMessage('Bridge Assistant', 'Hello! I am Bridge, your accessibility communication assistant. How can I help you today?', false);
 
-    // Enter-to-send is naturally handled by the form submit event
     let isSending = false;
 
     chatForm.addEventListener('submit', async (e) => {
@@ -27,11 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
         isSending = true;
         if (chatInput) chatInput.disabled = true;
 
-        // Display user message
         addMessage('You', message, true);
         chatInput.value = '';
 
-        // Display typing indicator
         const typingId = showTypingIndicator();
 
         try {
@@ -41,17 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-        const API =
-            window.location.hostname === 'localhost' ||
-            window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:8080'
-            : 'https://communication-site.onrender.com';
+            const API =
+                window.location.hostname === 'localhost' ||
+                window.location.hostname === '127.0.0.1'
+                ? 'http://localhost:8080'
+                : 'https://communication-site.onrender.com';
 
-            // We add a short timeout using AbortController to prevent hanging
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-            const response = await fetch(`${API}/api/ai/chat`, {
+            // FIXED: was /api/ai/chat — corrected to /api/chat
+            const response = await fetch(`${API}/api/chat`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({ message }),
@@ -70,18 +67,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const remoteMsg = data && (data.error || data.message) ? (data.error || data.message) : responseText;
-                console.error('[AI Chat] Bad response', { url: `${API}/api/ai/chat`, status: response.status, bodyPreview: String(remoteMsg).slice(0,200) });
+                console.error('[AI Chat] Bad response', { url: `${API}/api/chat`, status: response.status, bodyPreview: String(remoteMsg).slice(0,200) });
                 throw new Error((data && (data.error || data.message)) ? (data.error || data.message) : `Server returned ${response.status}`);
             }
 
             if (!data) {
-                // non-JSON but OK response — show raw text
                 if (responseText && responseText.trim()) {
                     addMessage('Bridge Assistant', responseText.trim(), false);
                 } else {
                     throw new Error('Invalid response from server');
                 }
-            } else if (data && data.success && data.reply) {
+            } else if (data && data.reply) {
                 addMessage('Bridge Assistant', data.reply, false);
             } else {
                 throw new Error((data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to get a response from the AI Assistant');
@@ -122,15 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
             bubbleDiv.style.border = '1px solid #f87171';
         }
 
-        // Convert line breaks to HTML breaks
         bubbleDiv.innerHTML = text.replace(/\n/g, '<br>');
 
         msgDiv.appendChild(avatarDiv);
         msgDiv.appendChild(bubbleDiv);
 
         chatBody.appendChild(msgDiv);
-
-        // Auto-scroll
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
@@ -171,9 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function removeTypingIndicator(id) {
         const el = document.getElementById(id);
-        if (el) {
-            el.remove();
-        }
+        if (el) el.remove();
     }
 
     console.log('✅ AI Assistant Chatbot Initialized');

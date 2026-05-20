@@ -33,10 +33,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const token = localStorage.getItem('vb_token');
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+
+            // FIXED: Show login prompt if not logged in
+            if (!token) {
+                removeTypingIndicator(typingId);
+                addMessage('System', 'Please log in to chat with Bridge Assistant.', false, true);
+                isSending = false;
+                if (chatInput) chatInput.disabled = false;
+                return;
             }
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
 
             const API =
                 window.location.hostname === 'localhost' ||
@@ -47,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-            // FIXED: was /api/ai/chat — corrected to /api/chat
+            // FIXED: corrected endpoint from /api/ai/chat to /api/chat
             const response = await fetch(`${API}/api/chat`, {
                 method: 'POST',
                 headers: headers,
@@ -67,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const remoteMsg = data && (data.error || data.message) ? (data.error || data.message) : responseText;
-                console.error('[AI Chat] Bad response', { url: `${API}/api/chat`, status: response.status, bodyPreview: String(remoteMsg).slice(0,200) });
+                console.error('[AI Chat] Bad response', { url: `${API}/api/chat`, status: response.status, bodyPreview: String(remoteMsg).slice(0, 200) });
                 throw new Error((data && (data.error || data.message)) ? (data.error || data.message) : `Server returned ${response.status}`);
             }
 
@@ -89,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let errorMsg = 'Sorry, I am having trouble connecting to my servers right now.';
             if (error.name === 'AbortError' || error.message.includes('timed out')) {
                 errorMsg = 'The request timed out. Please check your connection and try again.';
-            } else if (error.message.includes('401')) {
+            } else if (error.message.includes('401') || error.message.toLowerCase().includes('not authorized')) {
                 errorMsg = 'Please log in to use the AI Assistant.';
             }
 

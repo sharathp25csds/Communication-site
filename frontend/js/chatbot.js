@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!chatForm || !chatInput || !chatBody) return;
 
+    let isProcessing = false; // Prevent duplicate requests
+
     // Add initial greeting message
     addMessage('Bridge Assistant', 'Hello! I am Bridge, your accessibility communication assistant. How can I help you today?', false);
 
@@ -17,12 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // Prevent duplicate submissions while a request is in flight
+        if (isProcessing) return;
+
         const message = chatInput.value.trim();
         if (!message) return;
 
         // Display user message
         addMessage('You', message, true);
         chatInput.value = '';
+
+        // Lock input during processing
+        isProcessing = true;
+        chatInput.disabled = true;
 
         // Display typing indicator
         const typingId = showTypingIndicator();
@@ -37,9 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                 ? 'http://localhost:8080'
                 : 'https://communication-site.onrender.com';
-            // We add a short timeout using AbortController to prevent hanging
+
+            // Timeout: 30s for production (Render cold starts can be slow), 15s for local
+            const timeoutMs = API.includes('localhost') ? 15000 : 30000;
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
             const response = await fetch(`${API}/api/ai/chat`, {
                 method: 'POST',
@@ -70,14 +81,24 @@ document.addEventListener('DOMContentLoaded', () => {
             removeTypingIndicator(typingId);
             console.error('AI Chat Error:', error);
 
-            let errorMsg = 'Sorry, I am having trouble connecting to my servers right now.';
+            let errorMsg = 'Sorry, I am having trouble connecting right now. Please try again.';
             if (error.name === 'AbortError') {
-                errorMsg = 'The request timed out. Please check your connection and try again.';
-            } else if (error.message.includes('401')) {
+                errorMsg = 'The request timed out. The AI service may be starting up — please try again in a moment.';
+            } else if (error.message && error.message.includes('401')) {
                 errorMsg = 'Please log in to use the AI Assistant.';
+            } else if (error.message && error.message.includes('503')) {
+                errorMsg = 'AI service is temporarily unavailable. Please try again shortly.';
+            } else if (error.message && error.message !== 'Failed to fetch') {
+                // Show the specific backend error message if available
+                errorMsg = error.message;
             }
 
             addMessage('System', errorMsg, false, true);
+        } finally {
+            // Always unlock input
+            isProcessing = false;
+            chatInput.disabled = false;
+            chatInput.focus();
         }
     });
 

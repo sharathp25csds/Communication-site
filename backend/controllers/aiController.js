@@ -38,11 +38,12 @@ const chatWithAI = async (req, res, next) => {
     const apiKey = process.env.Gemini_API_Key || process.env.AI_API_KEY;
 
     if (!apiKey) {
+      console.error('❌ [AI Controller] No API key found in env: Gemini_API_Key or AI_API_KEY');
       return res.status(500).json({ success: false, error: "AI API key not configured" });
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `You are an accessibility communication assistant for VoiceBridge, a platform for people with speech and hearing disabilities.
 Your goals:
@@ -54,8 +55,10 @@ Your goals:
 
 User Message: ${message}`;
 
+    console.log('📡 [AI Controller] Sending request to Gemini for user:', req.user?.id);
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
+    console.log('✅ [AI Controller] Gemini response received, length:', responseText.length);
 
     // Save chat to database — req.user is guaranteed by protect middleware
     if (req.user && req.user.id) {
@@ -81,8 +84,25 @@ User Message: ${message}`;
       reply: responseText
     });
   } catch (error) {
-    console.error('❌ [AI Controller] Gemini API Error:', error.message);
-    res.status(500).json({ success: false, error: 'Failed to communicate with AI Assistant' });
+    console.error('❌ [AI Controller] Chat error:', {
+      message: error.message,
+      status: error.status || error.httpStatusCode,
+      code: error.code
+    });
+
+    let userMessage = 'Failed to communicate with AI Assistant';
+    let statusCode = 500;
+
+    if (error.message?.includes('API_KEY') || error.message?.includes('permission') || error.status === 403) {
+      userMessage = 'AI service authentication error. Please contact support.';
+    } else if (error.message?.includes('not found') || error.message?.includes('model')) {
+      userMessage = 'AI model configuration error. Please contact support.';
+    } else if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      userMessage = 'AI service is temporarily unavailable. Please try again.';
+      statusCode = 503;
+    }
+
+    res.status(statusCode).json({ success: false, error: userMessage });
   }
 };
 

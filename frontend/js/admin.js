@@ -10,9 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminLoginModal = document.getElementById('adminLoginModal');
     const adminLogoutBtn = document.getElementById('adminLogoutBtn');
     const adminError = document.getElementById('adminError');
+
+    // FIXED: Use explicit Render URL instead of window.location.origin
     const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         ? 'http://localhost:8080'
-        : window.location.origin;
+        : 'https://communication-site.onrender.com';
+
     // Helper: Close Modal
     const closeAdminModal = (modal) => {
         if (modal) {
@@ -84,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (showToastAndDelay) {
             showToast('Logged out successfully', 'success');
 
-            // Show loading animation on the logout button if possible
             if (adminLogoutBtn) {
                 adminLogoutBtn.style.opacity = '0.5';
                 adminLogoutBtn.style.pointerEvents = 'none';
@@ -93,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 adminLogoutBtn.innerHTML = '<span class="btn-loader" style="display:inline-block; width:14px; height:14px; margin-right:8px; border-width:2px;"></span> Logging out...';
             }
 
-            // Smooth transition before redirect
             document.body.style.transition = 'opacity 0.4s ease';
             document.body.style.opacity = '0';
 
@@ -330,10 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ status })
             });
-            loadAdminData(); // Refresh UI
+            loadAdminData();
         } catch (err) {
             console.error(err);
         }
     };
 });
-

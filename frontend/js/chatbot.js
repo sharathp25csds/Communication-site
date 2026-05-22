@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const token = localStorage.getItem('vb_token');
 
-            // FIXED: Show login prompt if not logged in
+            // Show login prompt if not logged in
             if (!token) {
                 removeTypingIndicator(typingId);
                 addMessage('System', 'Please log in to chat with Bridge Assistant.', false, true);
@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-            // FIXED: corrected endpoint from /api/ai/chat to /api/chat
-            const response = await fetch(`${API}/api/chat`, {
+            // FIXED: /api/ai/chat (matches app.use('/api/ai', aiRoutes) in app.js)
+            const response = await fetch(`${API}/api/ai/chat`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({ message }),
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const remoteMsg = data && (data.error || data.message) ? (data.error || data.message) : responseText;
-                console.error('[AI Chat] Bad response', { url: `${API}/api/chat`, status: response.status, bodyPreview: String(remoteMsg).slice(0, 200) });
+                console.error('[AI Chat] Bad response', { url: `${API}/api/ai/chat`, status: response.status, bodyPreview: String(remoteMsg).slice(0, 200) });
                 throw new Error((data && (data.error || data.message)) ? (data.error || data.message) : `Server returned ${response.status}`);
             }
 

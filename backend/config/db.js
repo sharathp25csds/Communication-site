@@ -24,9 +24,28 @@ const dbConfig = {
 
 let pool;
 
+// Safe ALTER TABLE helper — checks if column exists before adding
+async function addColumnIfNotExists(pool, table, column, definition) {
+  try {
+    const [rows] = await pool.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+      [process.env.DB_NAME, table, column]
+    );
+    if (rows.length === 0) {
+      await pool.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+      console.log(`   ✅ Column '${column}' added to '${table}'`);
+    } else {
+      console.log(`   - Column '${column}' already exists in '${table}'`);
+    }
+  } catch (e) {
+    console.warn(`   ⚠️ Could not add column '${column}' to '${table}':`, e.message);
+  }
+}
+
 async function connectDB() {
   try {
-    // 1. Connect without database first to ensure server is up and check/create DB
+    // 1. Connect without database first
     const connection = await mysql.createConnection(dbConfig);
     console.log('✅ Connected to MySQL Server');
 
@@ -35,13 +54,13 @@ async function connectDB() {
     console.log(`✅ Database '${process.env.DB_NAME}' verified/created`);
     await connection.end();
 
-    // 3. Now create the pool with the database specified
+    // 3. Create pool with database
     pool = mysql.createPool({ ...dbConfig, database: process.env.DB_NAME });
-    
+
     // 4. Verify/Create Tables
     const [rows] = await pool.query('SHOW TABLES');
     const existingTables = rows.map(row => Object.values(row)[0]);
-    
+
     const requiredTables = ['users', 'calls', 'reports', 'transcripts', 'ai_chats'];
     let allTablesExist = true;
 
@@ -66,23 +85,16 @@ async function connectDB() {
       )
     `);
 
-    // Run migrations to add new columns to existing tables
-    try {
-      await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user'");
-      await pool.query("ALTER TABLE reports ADD COLUMN IF NOT EXISTS subject VARCHAR(255)");
-      await pool.query("ALTER TABLE reports ADD COLUMN IF NOT EXISTS priority VARCHAR(50) DEFAULT 'medium'");
-    } catch (e) {
-      // Ignore errors if columns already exist (for MySQL versions that don't support IF NOT EXISTS in ALTER TABLE)
-      if (e.code !== 'ER_DUP_FIELDNAME') {
-        console.warn('⚠️ Could not run migrations:', e.message);
-      }
-    }
+    // FIXED: Safe migrations using INFORMATION_SCHEMA check
+    await addColumnIfNotExists(pool, 'users', 'role', "VARCHAR(50) DEFAULT 'user'");
+    await addColumnIfNotExists(pool, 'reports', 'subject', 'VARCHAR(255)');
+    await addColumnIfNotExists(pool, 'reports', 'priority', "VARCHAR(50) DEFAULT 'medium'");
 
     // Seed or Update Admin Account
     const adminEmail = 'sharathp25csds@rnsit.ac.in';
     const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash('sharu@098', 10);
-    
+
     const [adminRows] = await pool.query('SELECT id, role FROM users WHERE email = ?', [adminEmail]);
     if (adminRows.length === 0) {
       await pool.query(
@@ -103,7 +115,6 @@ async function connectDB() {
       const schemaPath = path.join(__dirname, '../../database/schema.sql');
       if (fs.existsSync(schemaPath)) {
         const schema = fs.readFileSync(schemaPath, 'utf8');
-        // Simple split by semicolon (might need more robust splitting for complex SQL)
         const queries = schema.split(';').filter(q => q.trim().length > 0);
         for (let query of queries) {
           await pool.query(query);
@@ -121,8 +132,6 @@ async function connectDB() {
     } else {
       console.error('❌ Database initialization failed:', err.message);
     }
-    
-    // Prevent backend crash but log the failure
     console.warn('⚠️ Backend is running with limited database functionality.');
   }
 }
